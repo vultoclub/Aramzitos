@@ -91,10 +91,10 @@ async function handleCommand(interaction) {
           author: { name: player.riot_id },
           fields: [
             { name: "Nivel & XP", value: `Nivel **${player.level}**\n${bar} ${xpPct}%\n${player.xp} / ${xpNeeded} XP`, inline: true },
-            { name: "Economia",   value: `ðŸª™ **${player.coins}** moedas`, inline: true },
-            { name: "Partidas",   value: `ðŸŽ® **${player.matches_played}** jogadas\nðŸ† **${player.matches_won}** vitorias (${rate}%)`, inline: true },
+            { name: "Economia",   value: `**${player.coins}** moedas`, inline: true },
+            { name: "Partidas",   value: `**${player.matches_played}** jogadas\n**${player.matches_won}** vitorias (${rate}%)`, inline: true },
           ],
-          footer: { text: `Skin: ${player.active_skin} | Use /loja para mudar` },
+          footer: { text: `Skin: ${player.active_skin ?? "default"} | Use /loja para mudar` },
         }],
         flags: 64,
       },
