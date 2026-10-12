@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     if (interaction.type === InteractionType.MESSAGE_COMPONENT) return res.status(200).json(await handleComponent(interaction));
   } catch (error) {
     console.error("Interaction failed", error);
-    return res.status(200).json(reply("Não consegui concluir o comando. Verifique a configuração e tente novamente."));
+    return res.status(200).json(reply("NÃ£o consegui concluir o comando. Verifique a configuraÃ§Ã£o e tente novamente."));
   }
   return res.status(400).send("Unsupported interaction type");
 }
@@ -50,26 +50,27 @@ async function handleCommand(interaction) {
     const iconId = Math.floor(Math.random() * 29) + 1;
     const { error } = await supabase.from("players").upsert({ discord_id: discordId, riot_puuid: account.puuid, riot_id: `${gameName}#${tagLine}`, is_verified: false, pending_icon_id: iconId }, { onConflict: "discord_id" });
     if (error) throw error;
-    return { type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `Mude o ícone do seu perfil do LoL para **${iconId}** e confirme quando estiver pronto.`, flags: 64, components: [{ type: 1, components: [{ type: 2, style: 1, label: "Confirmar ícone", custom_id: "verify_icon" }] }] } };
+    const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.20.1/img/profileicon/${iconId}.png`;
+    return { type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { embeds: [{ title: "VerificaÃ§Ã£o de Conta", description: `Mude o Ã­cone do seu perfil do LoL para o Ã­cone abaixo e clique em **Confirmar Ã­cone**.`, thumbnail: { url: iconUrl }, color: 0x5865F2, footer: { text: `ID do Ã­cone: ${iconId}` } }], flags: 64, components: [{ type: 1, components: [{ type: 2, style: 1, label: "Confirmar Ã­cone", custom_id: "verify_icon" }] }] } };
   }
   if (name === "perfil") {
     const { data: player, error } = await supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle();
     if (error) throw error;
-    if (!player) return reply("Ainda não encontrei seu perfil. Use /verificar primeiro.");
+    if (!player) return reply("Ainda nÃ£o encontrei seu perfil. Use /verificar primeiro.");
     const rate = player.matches_played ? Math.round(player.matches_won * 100 / player.matches_played) : 0;
-    return reply(`**Perfil de ${player.riot_id}**\nNível: ${player.level} · XP: ${player.xp}\nMoedas: ${player.coins}\nPartidas: ${player.matches_played} · Vitórias: ${player.matches_won} (${rate}%)`);
+    return reply(`**Perfil de ${player.riot_id}**\nNÃ­vel: ${player.level} Â· XP: ${player.xp}\nMoedas: ${player.coins}\nPartidas: ${player.matches_played} Â· VitÃ³rias: ${player.matches_won} (${rate}%)`);
   }
   if (name === "top" || name === "ranking") {
     const { data, error } = await supabase.from("players").select("discord_id, riot_id, level, xp, matches_won").eq("is_verified", true).order("level", { ascending: false }).order("xp", { ascending: false }).limit(10);
     if (error) throw error;
-    return reply(data?.length ? `**Ranking ARAM**\n${data.map((p, i) => `${i + 1}. ${p.riot_id} — nível ${p.level}, ${p.xp} XP, ${p.matches_won} vitórias`).join("\n")}` : "Ainda não há jogadores verificados no ranking.");
+    return reply(data?.length ? `**Ranking ARAM**\n${data.map((p, i) => `${i + 1}. ${p.riot_id} â€” nÃ­vel ${p.level}, ${p.xp} XP, ${p.matches_won} vitÃ³rias`).join("\n")}` : "Ainda nÃ£o hÃ¡ jogadores verificados no ranking.");
   }
   if (name === "resultado") {
     const matchId = options.find(x => x.name === "match_id")?.value;
     const winningTeam = options.find(x => x.name === "time_vencedor")?.value;
     const { data: match, error } = await supabase.from("matches").select("id,status").eq("id", matchId).maybeSingle();
     if (error) throw error;
-    if (!match || match.status === "finalizada") return reply("Partida não encontrada ou já finalizada.");
+    if (!match || match.status === "finalizada") return reply("Partida nÃ£o encontrada ou jÃ¡ finalizada.");
     const { data: participants, error: pError } = await supabase.from("match_players").select("discord_id,team").eq("match_id", matchId);
     if (pError) throw pError;
     for (const participant of participants ?? []) {
@@ -80,20 +81,20 @@ async function handleCommand(interaction) {
     }
     const { error: finishError } = await supabase.from("matches").update({ status: "finalizada", winner_team: winningTeam }).eq("id", matchId);
     if (finishError) throw finishError;
-    return reply(`Resultado registrado. Time **${winningTeam}** venceu e as recompensas foram distribuídas.`, false);
+    return reply(`Resultado registrado. Time **${winningTeam}** venceu e as recompensas foram distribuÃ­das.`, false);
   }
-  return reply("Comando ainda não implementado.");
+  return reply("Comando ainda nÃ£o implementado.");
 }
 
 async function handleComponent(interaction) {
-  if (interaction.data.custom_id !== "verify_icon") return reply("Botão desconhecido.");
+  if (interaction.data.custom_id !== "verify_icon") return reply("BotÃ£o desconhecido.");
   const discordId = interaction.member?.user?.id ?? interaction.user?.id;
   const { data: player, error } = await supabase.from("players").select("riot_puuid,pending_icon_id,is_verified").eq("discord_id", discordId).maybeSingle();
   if (error) throw error;
   if (!player) return reply("Use /verificar antes de confirmar.");
-  if (player.is_verified) return reply("Sua conta já está verificada.");
+  if (player.is_verified) return reply("Sua conta jÃ¡ estÃ¡ verificada.");
   const summoner = await getSummonerByPuuid(player.riot_puuid);
-  if (summoner.profileIconId !== player.pending_icon_id) return reply(`O ícone ainda não corresponde ao desafio (ID ${player.pending_icon_id}). Tente novamente após alterá-lo.`);
+  if (summoner.profileIconId !== player.pending_icon_id) return reply(`O Ã­cone ainda nÃ£o corresponde ao desafio (ID ${player.pending_icon_id}). Tente novamente apÃ³s alterÃ¡-lo.`);
   const { error: updateError } = await supabase.from("players").update({ is_verified: true, pending_icon_id: null }).eq("discord_id", discordId);
   if (updateError) throw updateError;
   const roleId = process.env.DISCORD_VERIFIED_ROLE_ID;
