@@ -19,7 +19,13 @@ export default async function handler(req, res) {
   const rawBody = await readRawBody(req);
   const signature = req.headers["x-signature-ed25519"];
   const timestamp = req.headers["x-signature-timestamp"];
-  const valid = signature && timestamp && process.env.DISCORD_PUBLIC_KEY && verifyKey(rawBody, signature, timestamp, process.env.DISCORD_PUBLIC_KEY);
+  const publicKey = process.env.DISCORD_PUBLIC_KEY;
+  if (!signature || !timestamp || !publicKey) {
+    console.error("Missing headers or DISCORD_PUBLIC_KEY env var");
+    return res.status(401).send("Invalid request signature");
+  }
+  let valid = false;
+  try { valid = verifyKey(rawBody, signature, timestamp, publicKey); } catch (e) { console.error("verifyKey error", e); }
   if (!valid) return res.status(401).send("Invalid request signature");
   let interaction;
   try { interaction = JSON.parse(rawBody); } catch { return res.status(400).send("Invalid JSON"); }
