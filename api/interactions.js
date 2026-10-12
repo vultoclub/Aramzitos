@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(401).send("Invalid request signature");
   }
   let valid = false;
-  try { valid = verifyKey(rawBody, signature, timestamp, publicKey); } catch (e) { console.error("verifyKey error", e); }
+  try { valid = verifyKey(rawBody, signature, timestamp, publicKey); } catch (e) { console.error("verifyKey error", e); return res.status(401).send("Invalid request signature"); }
   if (!valid) return res.status(401).send("Invalid request signature");
   let interaction;
   try { interaction = JSON.parse(rawBody); } catch { return res.status(400).send("Invalid JSON"); }
