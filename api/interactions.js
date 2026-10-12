@@ -80,7 +80,8 @@ async function handleCommand(interaction) {
     const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
     const xpNeeded = player.level * 200;
     const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
-    const bar = "â–ˆ".repeat(Math.floor(xpPct / 10)) + "â–‘".repeat(10 - Math.floor(xpPct / 10));
+    const filled = Math.floor(xpPct / 10);
+    const bar = "[" + "=".repeat(filled) + "-".repeat(10 - filled) + "]";
     const skinColors = { default: 0x5865F2, shadow: 0xcc0000, gold: 0xFFB800, void: 0x8c00ff, ice: 0x00b4ff };
     const color = skinColors[player.active_skin] ?? skinColors.default;
     return {
