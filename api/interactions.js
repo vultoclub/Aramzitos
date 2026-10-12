@@ -58,12 +58,12 @@ async function handleCommand(interaction) {
     if (error) throw error;
     if (!player) return reply("Ainda nÃ£o encontrei seu perfil. Use /verificar primeiro.");
     const rate = player.matches_played ? Math.round(player.matches_won * 100 / player.matches_played) : 0;
-    return reply(`**Perfil de ${player.riot_id}**\nNÃ­vel: ${player.level} Â· XP: ${player.xp}\nMoedas: ${player.coins}\nPartidas: ${player.matches_played} Â· VitÃ³rias: ${player.matches_won} (${rate}%)`);
+    return reply(`**Perfil de ${player.riot_id}**\nNivel: ${player.level} | XP: ${player.xp}\nMoedas: ${player.coins}\nPartidas: ${player.matches_played} | Vitorias: ${player.matches_won} (${rate}%)`);
   }
   if (name === "top" || name === "ranking") {
     const { data, error } = await supabase.from("players").select("discord_id, riot_id, level, xp, matches_won").eq("is_verified", true).order("level", { ascending: false }).order("xp", { ascending: false }).limit(10);
     if (error) throw error;
-    return reply(data?.length ? `**Ranking ARAM**\n${data.map((p, i) => `${i + 1}. ${p.riot_id} â€” nÃ­vel ${p.level}, ${p.xp} XP, ${p.matches_won} vitÃ³rias`).join("\n")}` : "Ainda nÃ£o hÃ¡ jogadores verificados no ranking.");
+    return reply(data?.length ? `**Ranking ARAM**\n${data.map((p, i) => `${i + 1}. ${p.riot_id} - Nivel ${p.level}, ${p.xp} XP, ${p.matches_won} vitorias`).join("\n")}` : "Ainda nao ha jogadores verificados no ranking.");
   }
   if (name === "resultado") {
     const matchId = options.find(x => x.name === "match_id")?.value;
