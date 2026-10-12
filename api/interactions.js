@@ -51,7 +51,7 @@ async function handleCommand(interaction) {
     const { error } = await supabase.from("players").upsert({ discord_id: discordId, riot_puuid: account.puuid, riot_id: `${gameName}#${tagLine}`, is_verified: false, pending_icon_id: iconId }, { onConflict: "discord_id" });
     if (error) throw error;
     const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.20.1/img/profileicon/${iconId}.png`;
-    return { type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { embeds: [{ title: "VerificaÃ§Ã£o de Conta", description: `Mude o Ã­cone do seu perfil do LoL para o Ã­cone abaixo e clique em **Confirmar Ã­cone**.`, thumbnail: { url: iconUrl }, color: 0x5865F2, footer: { text: `ID do Ã­cone: ${iconId}` } }], flags: 64, components: [{ type: 1, components: [{ type: 2, style: 1, label: "Confirmar Ã­cone", custom_id: "verify_icon" }] }] } };
+    return { type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { embeds: [{ title: "Verificacao de Conta", description: `Mude o icone do seu perfil do LoL para o icone abaixo e clique em **Confirmar Icone**.`, thumbnail: { url: iconUrl }, color: 0x5865F2, footer: { text: `ID do icone: ${iconId}` } }], flags: 64, components: [{ type: 1, components: [{ type: 2, style: 1, label: "Confirmar Icone", custom_id: "verify_icon" }] }] } };
   }
   if (name === "perfil") {
     const { data: player, error } = await supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle();
