@@ -77,11 +77,27 @@ async function handleCommand(interaction) {
     const { data: player, error } = await supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle();
     if (error) throw error;
     if (!player) return reply("Ainda nao encontrei seu perfil. Use /verificar primeiro.");
-    const cardUrl = `${CARD_BASE_URL}/api/card?id=${discordId}&t=${Date.now()}`;
+    const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
+    const xpNeeded = player.level * 200;
+    const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
+    const skinColors = { default: "5865F2", shadow: "cc0000", gold: "FFB800", void: "8c00ff", ice: "00b4ff" };
+    const color = skinColors[player.active_skin] ?? skinColors.default;
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        embeds: [{ image: { url: cardUrl }, color: 0x5865F2 }],
+        embeds: [{
+          color: parseInt(color, 16),
+          author: { name: player.riot_id },
+          fields: [
+            { name: "Nivel", value: `${player.level}`, inline: true },
+            { name: "XP", value: `${player.xp} / ${xpNeeded}`, inline: true },
+            { name: "Moedas", value: `ðŸª™ ${player.coins}`, inline: true },
+            { name: "Partidas", value: `${player.matches_played}`, inline: true },
+            { name: "Vitorias", value: `${player.matches_won} (${rate}%)`, inline: true },
+            { name: "Skin", value: player.active_skin, inline: true },
+          ],
+          footer: { text: `XP: ${xpPct}% para o proximo nivel` },
+        }],
         flags: 64,
       },
     };
