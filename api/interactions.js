@@ -82,7 +82,11 @@ async function handleCommand(interaction) {
     const interactionToken = interaction.token;
     // NÃ£o podemos usar await aqui pois precisamos retornar antes dos 3s
     // Usamos .then() para processar em background
-    supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle().then(async ({ data: player, error }) => {
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 25000));
+    Promise.race([
+      supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle(),
+      timeout,
+    ]).then(async ({ data: player, error }) => {
       let embed;
       if (error || !player) {
         embed = { description: "Ainda nao encontrei seu perfil. Use /verificar primeiro.", color: 0xcc0000 };
@@ -109,7 +113,16 @@ async function handleCommand(interaction) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] }),
       });
-    }).catch(console.error);
+    }).catch(async (err) => {
+      const msg = err.message === "timeout"
+        ? "Demorou demais para carregar. Tente novamente."
+        : "Erro ao carregar perfil. Tente novamente.";
+      await fetch(`https://discord.com/api/v10/webhooks/${appId}/${interactionToken}/messages/@original`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: msg }),
+      });
+    });
 
     // Resposta imediata â€” o Discord aceita e espera a ediÃ§Ã£o
     return {
