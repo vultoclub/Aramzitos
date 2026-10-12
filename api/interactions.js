@@ -203,7 +203,68 @@ async function handleCommand(interaction) {
     return reply(`Skin **${itemId}** equipada! Use /perfil para ver seu novo card.`);
   }
 
-  // â”€â”€ /resultado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ /fila â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (name === "fila") {
+    const sub = options.find(x => x.name === "acao")?.value ?? "ver";
+
+    if (sub === "entrar") {
+      const { data: player } = await supabase.from("players").select("riot_id, elo, is_verified").eq("discord_id", discordId).maybeSingle();
+      if (!player) return reply("Use /setup primeiro.");
+      if (!player.is_verified) return reply("Voce precisa verificar sua conta antes de entrar na fila. Use /setup.");
+      const { error: qErr } = await supabase.from("queue").upsert({ discord_id: discordId, riot_id: player.riot_id, elo: player.elo }, { onConflict: "discord_id" });
+      if (qErr) throw qErr;
+      const { data: queue } = await supabase.from("queue").select("discord_id, riot_id, elo").order("entered_at");
+      const count = queue?.length ?? 0;
+      if (count >= 10) {
+        // Sorteia os times
+        const shuffled = [...queue].sort(() => Math.random() - 0.5);
+        const blue = shuffled.slice(0, 5);
+        const red  = shuffled.slice(5, 10);
+        // Cria a partida no banco
+        const { data: match } = await supabase.from("matches").insert({ status: "em_andamento", captain_discord_id: blue[0].discord_id }).select().single();
+        if (match) {
+          const entries = [
+            ...blue.map(p => ({ match_id: match.id, discord_id: p.discord_id, team: "blue" })),
+            ...red.map(p => ({ match_id: match.id, discord_id: p.discord_id, team: "red" })),
+          ];
+          await supabase.from("match_players").insert(entries);
+          await supabase.from("queue").delete().in("discord_id", shuffled.map(p => p.discord_id));
+        }
+        const blueNames = blue.map((p, i) => `${i === 0 ? "**[CAP]** " : ""}${p.riot_id}${p.elo ? ` (${p.elo})` : ""}`).join("\n");
+        const redNames  = red.map((p, i) => `${i === 0 ? "**[CAP]** " : ""}${p.riot_id}${p.elo ? ` (${p.elo})` : ""}`).join("\n");
+        return {
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            embeds: [{
+              title: "Partida encontrada!",
+              color: 0x00ff88,
+              fields: [
+                { name: "Time Azul", value: blueNames, inline: true },
+                { name: "Time Vermelho", value: redNames, inline: true },
+              ],
+              footer: { text: match ? `ID da partida: ${match.id}` : "" },
+              description: "O capitao de cada time cria a sala no LoL Client.\nApos a partida, use **/resultado** para registrar o vencedor.",
+            }],
+          },
+        };
+      }
+      return reply(`Voce entrou na fila! (${count}/10)\nUse **/fila ver** para ver quem esta esperando.`);
+    }
+
+    if (sub === "sair") {
+      const { error } = await supabase.from("queue").delete().eq("discord_id", discordId);
+      if (error) throw error;
+      return reply("Voce saiu da fila.");
+    }
+
+    // ver (default)
+    const { data: queue } = await supabase.from("queue").select("riot_id, elo").order("entered_at");
+    if (!queue?.length) return reply("A fila esta vazia. Use **/fila entrar** para ser o primeiro!");
+    const lines = queue.map((p, i) => `${i + 1}. **${p.riot_id}**${p.elo ? ` â€” ${p.elo}` : ""}`);
+    return reply(`**Fila ARAM (${queue.length}/10)**\n\n${lines.join("\n")}`);
+  }
+
+
   if (name === "resultado") {
     const matchId     = options.find(x => x.name === "match_id")?.value;
     const winningTeam = options.find(x => x.name === "time_vencedor")?.value;
