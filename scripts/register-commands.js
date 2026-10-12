@@ -2,6 +2,33 @@ const commands = [
   {
     name: "setup",
     description: "Configure seu perfil: elo e conta do LoL",
+    options: [
+      {
+        name: "elo",
+        description: "Seu elo atual no LoL",
+        type: 3,
+        required: true,
+        choices: [
+          { name: "Ferro",       value: "Ferro" },
+          { name: "Bronze",      value: "Bronze" },
+          { name: "Prata",       value: "Prata" },
+          { name: "Ouro",        value: "Ouro" },
+          { name: "Platina",     value: "Platina" },
+          { name: "Esmeralda",   value: "Esmeralda" },
+          { name: "Diamante",    value: "Diamante" },
+          { name: "Mestre",      value: "Mestre" },
+          { name: "Grao-Mestre", value: "Grao-Mestre" },
+          { name: "Desafiante",  value: "Desafiante" },
+          { name: "Unranked",    value: "Unranked" },
+        ],
+      },
+      {
+        name: "nick",
+        description: "Seu Riot ID (ex: VultoClub#BR1)",
+        type: 3,
+        required: true,
+      },
+    ],
   },
   {
     name: "perfil",
