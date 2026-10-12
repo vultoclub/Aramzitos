@@ -260,7 +260,7 @@ async function handleCommand(interaction) {
     // ver (default)
     const { data: queue } = await supabase.from("queue").select("riot_id, elo").order("entered_at");
     if (!queue?.length) return reply("A fila esta vazia. Use **/fila entrar** para ser o primeiro!");
-    const lines = queue.map((p, i) => `${i + 1}. **${p.riot_id}**${p.elo ? ` â€” ${p.elo}` : ""}`);
+    const lines = queue.map((p, i) => `${i + 1}. **${p.riot_id}**${p.elo ? ` - ${p.elo}` : ""}`);
     return reply(`**Fila ARAM (${queue.length}/10)**\n\n${lines.join("\n")}`);
   }
 
