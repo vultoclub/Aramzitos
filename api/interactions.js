@@ -101,7 +101,7 @@ async function handleCommand(interaction) {
         embeds: [{
           title: "Verificacao de Conta",
           description: `Elo registrado: **${eloOpt}**\nConta encontrada: **${gameName}#${tagLine}**\n\nMude o icone do seu perfil do LoL para o icone abaixo e clique em **Confirmar Icone**.`,
-          thumbnail: { url: iconUrl },
+          image: { url: iconUrl },
           color: 0x5865F2,
           footer: { text: `ID do icone: ${iconId}` },
         }],
