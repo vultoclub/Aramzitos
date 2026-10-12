@@ -53,7 +53,21 @@ const commands = [
     options: [{ name: "item", description: "ID da skin (veja /loja)", type: 3, required: true }],
   },
   {
-    name: "resultado",
+    name: "fila",
+    description: "Gerencie sua posicao na fila ARAM",
+    options: [{
+      name: "acao",
+      description: "O que fazer",
+      type: 3,
+      required: false,
+      choices: [
+        { name: "Entrar na fila", value: "entrar" },
+        { name: "Sair da fila",   value: "sair" },
+        { name: "Ver a fila",     value: "ver" },
+      ],
+    }],
+  },
+
     description: "Registre o resultado de uma partida",
     options: [
       { name: "match_id",      description: "ID UUID da partida", type: 3, required: true },
