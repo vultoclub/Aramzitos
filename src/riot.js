@@ -1,5 +1,5 @@
 const ACCOUNT_REGION = "americas";
-const PLATFORM_REGION = "americas";
+const PLATFORM_REGION = process.env.RIOT_PLATFORM_REGION || "br1";
 
 async function riotGet(url) {
   const key = process.env.RIOT_API_KEY;
@@ -22,3 +22,4 @@ export async function getSummonerByPuuid(puuid) {
   const path = `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}`;
   return riotGet(`https://${PLATFORM_REGION}.api.riotgames.com${path}`);
 }
+
