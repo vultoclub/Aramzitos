@@ -1,6 +1,6 @@
 import { InteractionResponseType, InteractionType, verifyKey } from "discord-interactions";
 import { supabase } from "../src/supabase.js";
-import { getAccountByRiotId, getSummonerByPuuid, getSummonerRank, rankEmoji } from "../src/riot.js";
+import { getAccountByRiotId, getSummonerByPuuid } from "../src/riot.js";
 import { applyMatchReward } from "../src/gamification.js";
 
 export const config = { api: { bodyParser: false } };
