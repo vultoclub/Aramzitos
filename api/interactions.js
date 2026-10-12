@@ -232,6 +232,8 @@ async function handleCommand(interaction) {
         }
         const blueNames = blue.map((p, i) => `${i === 0 ? "**[CAP]** " : ""}${p.riot_id}${p.elo ? ` (${p.elo})` : ""}`).join("\n");
         const redNames  = red.map((p, i) => `${i === 0 ? "**[CAP]** " : ""}${p.riot_id}${p.elo ? ` (${p.elo})` : ""}`).join("\n");
+        const roomName  = `ARAM-${Math.floor(1000 + Math.random() * 9000)}`;
+        const roomPass  = `cart${Math.floor(1000 + Math.random() * 9000)}`;
         return {
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
@@ -239,11 +241,13 @@ async function handleCommand(interaction) {
               title: "Partida encontrada!",
               color: 0x00ff88,
               fields: [
-                { name: "Time Azul", value: blueNames, inline: true },
-                { name: "Time Vermelho", value: redNames, inline: true },
+                { name: "Time Azul",      value: blueNames, inline: true },
+                { name: "Time Vermelho",  value: redNames,  inline: true },
+                { name: "Nome da Sala",   value: `\`${roomName}\``, inline: true },
+                { name: "Senha da Sala",  value: `\`${roomPass}\``, inline: true },
               ],
-              footer: { text: match ? `ID da partida: ${match.id}` : "" },
-              description: "O capitao de cada time cria a sala no LoL Client.\nApos a partida, use **/resultado** para registrar o vencedor.",
+              description: `O capitao **${blue[0].riot_id}** cria a sala no LoL Client com o nome e senha acima.\nApos a partida, use **/resultado match_id:${match?.id ?? "???"}** para registrar o vencedor.`,
+              footer: { text: match ? `ID: ${match.id}` : "" },
             }],
           },
         };
