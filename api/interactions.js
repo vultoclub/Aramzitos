@@ -61,22 +61,52 @@ async function handleCommand(interaction) {
   const discordId = interaction.member?.user?.id ?? interaction.user?.id;
 
   // â”€â”€ /setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Passo 1: mostra dropdown de elo
+  // Argumentos directos: sem dropdowns, resposta instantanea
   if (name === "setup") {
+    const eloOpt  = options.find(x => x.name === "elo")?.value;
+    const nickOpt = options.find(x => x.name === "nick")?.value;
+
+    // Se nao passou argumentos, mostra instrucoes
+    if (!eloOpt || !nickOpt) {
+      return reply(
+        "**Como usar /setup:**\n" +
+        "`/setup elo:Ouro nick:SeuNome#BR1`\n\n" +
+        "**Elos disponiveis:** Ferro, Bronze, Prata, Ouro, Platina, Esmeralda, Diamante, Mestre, Grao-Mestre, Desafiante, Unranked"
+      );
+    }
+
+    const parts    = nickOpt.trim().split("#");
+    const gameName = parts[0]?.trim();
+    const tagLine  = parts[1]?.trim() || "BR1";
+    if (!gameName) return reply("Riot ID invalido. Use o formato Nome#BR1.");
+
+    let account;
+    try {
+      account = await getAccountByRiotId(gameName, tagLine);
+    } catch {
+      return reply(`Nao encontrei a conta **${gameName}#${tagLine}** na Riot. Verifique o nome e tente novamente.`);
+    }
+
+    const iconId = Math.floor(Math.random() * 29) + 1;
+    const { error } = await supabase.from("players").upsert(
+      { discord_id: discordId, riot_puuid: account.puuid, riot_id: `${gameName}#${tagLine}`, is_verified: false, pending_icon_id: iconId, elo: eloOpt },
+      { onConflict: "discord_id" }
+    );
+    if (error) throw error;
+
+    const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.20.1/img/profileicon/${iconId}.png`;
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "**Configuracao do perfil â€” Passo 1/2**\nEscolha seu elo atual no LoL:",
-        flags: 64,
-        components: [{
-          type: 1,
-          components: [{
-            type: 3, // SELECT_MENU
-            custom_id: "setup_elo",
-            placeholder: "Selecione seu elo...",
-            options: ELO_OPTIONS,
-          }],
+        embeds: [{
+          title: "Verificacao de Conta",
+          description: `Elo registrado: **${eloOpt}**\nConta encontrada: **${gameName}#${tagLine}**\n\nMude o icone do seu perfil do LoL para o icone abaixo e clique em **Confirmar Icone**.`,
+          thumbnail: { url: iconUrl },
+          color: 0x5865F2,
+          footer: { text: `ID do icone: ${iconId}` },
         }],
+        flags: 64,
+        components: [{ type: 1, components: [{ type: 2, style: 1, label: "Confirmar Icone", custom_id: "verify_icon" }] }],
       },
     };
   }
