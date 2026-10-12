@@ -77,6 +77,19 @@ async function handleCommand(interaction) {
     const { data: player, error } = await supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle();
     if (error) throw error;
     if (!player) return reply("Ainda nao encontrei seu perfil. Use /verificar primeiro.");
+
+    // Busca elo com timeout de 2s â€” se falhar mostra Unranked
+    let rankText = "Unranked";
+    if (player.summoner_id) {
+      try {
+        const { getSummonerRank, rankEmoji } = await import("../src/riot.js");
+        const riotTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 2000));
+        const rank = await Promise.race([getSummonerRank(player.summoner_id), riotTimeout]);
+        const tierName = rank.tier === "UNRANKED" ? "Unranked" : `${rank.tier[0]}${rank.tier.slice(1).toLowerCase()} ${rank.rank}`;
+        rankText = `${rankEmoji(rank.tier)} ${tierName}`;
+      } catch { rankText = "Unranked"; }
+    }
+
     const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
     const xpNeeded = player.level * 200;
     const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
@@ -94,6 +107,7 @@ async function handleCommand(interaction) {
             { name: "Nivel & XP", value: `Nivel **${player.level}**\n${bar} ${xpPct}%\n${player.xp} / ${xpNeeded} XP`, inline: true },
             { name: "Economia",   value: `**${player.coins}** moedas`, inline: true },
             { name: "Partidas",   value: `**${player.matches_played}** jogadas\n**${player.matches_won}** vitorias (${rate}%)`, inline: true },
+            { name: "Elo",        value: rankText, inline: true },
           ],
           footer: { text: `Skin: ${player.active_skin ?? "default"} | Use /loja para mudar` },
         }],
