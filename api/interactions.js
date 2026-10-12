@@ -74,32 +74,47 @@ async function handleCommand(interaction) {
 
   // â”€â”€ /perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (name === "perfil") {
-    const { data: player, error } = await supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle();
-    if (error) throw error;
-    if (!player) return reply("Ainda nao encontrei seu perfil. Use /verificar primeiro.");
-    const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
-    const xpNeeded = player.level * 200;
-    const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
-    const bar = "â–ˆ".repeat(Math.floor(xpPct / 10)) + "â–‘".repeat(10 - Math.floor(xpPct / 10));
-    const skinColors = { default: 0x5865F2, shadow: 0xcc0000, gold: 0xFFB800, void: 0x8c00ff, ice: 0x00b4ff };
-    const color = skinColors[player.active_skin] ?? skinColors.default;
-    const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.20.1/img/profileicon/${player.profile_icon_id ?? 1}.png`;
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        embeds: [{
+    // Responde imediatamente para evitar timeout do Discord (3s)
+    // Depois edita a mensagem com os dados reais via REST
+    const appId = process.env.DISCORD_APPLICATION_ID ?? "1559142578618630144";
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    // Dispara o fetch dos dados em background e edita a resposta
+    const interactionToken = interaction.token;
+    // NÃ£o podemos usar await aqui pois precisamos retornar antes dos 3s
+    // Usamos .then() para processar em background
+    supabase.from("players").select("*").eq("discord_id", discordId).maybeSingle().then(async ({ data: player, error }) => {
+      let embed;
+      if (error || !player) {
+        embed = { description: "Ainda nao encontrei seu perfil. Use /verificar primeiro.", color: 0xcc0000 };
+      } else {
+        const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
+        const xpNeeded = player.level * 200;
+        const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
+        const bar = "â–ˆ".repeat(Math.floor(xpPct / 10)) + "â–‘".repeat(10 - Math.floor(xpPct / 10));
+        const skinColors = { default: 0x5865F2, shadow: 0xcc0000, gold: 0xFFB800, void: 0x8c00ff, ice: 0x00b4ff };
+        const color = skinColors[player.active_skin] ?? skinColors.default;
+        embed = {
           color,
-          author: { name: player.riot_id, icon_url: iconUrl },
+          author: { name: player.riot_id },
           fields: [
             { name: "Nivel & XP", value: `Nivel **${player.level}**\n${bar} ${xpPct}%\n${player.xp} / ${xpNeeded} XP`, inline: true },
             { name: "Economia", value: `ðŸª™ **${player.coins}** moedas`, inline: true },
             { name: "Partidas", value: `ðŸŽ® **${player.matches_played}** jogadas\nðŸ† **${player.matches_won}** vitorias (${rate}%)`, inline: true },
           ],
           footer: { text: `Skin: ${player.active_skin} | Use /loja para mudar` },
-          thumbnail: { url: iconUrl },
-        }],
-        flags: 64,
-      },
+        };
+      }
+      await fetch(`https://discord.com/api/v10/webhooks/${appId}/${interactionToken}/messages/@original`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] }),
+      });
+    }).catch(console.error);
+
+    // Resposta imediata â€” o Discord aceita e espera a ediÃ§Ã£o
+    return {
+      type: 5, // DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+      data: { flags: 64 },
     };
   }
 
