@@ -65,7 +65,42 @@ async function handleCommand(interaction) {
     if (error) throw error;
     return reply(data?.length ? `**Ranking ARAM**\n${data.map((p, i) => `${i + 1}. ${p.riot_id} - Nivel ${p.level}, ${p.xp} XP, ${p.matches_won} vitorias`).join("\n")}` : "Ainda nao ha jogadores verificados no ranking.");
   }
-  if (name === "resultado") {
+  if (name === "setup") {
+    const guildId = interaction.guild_id;
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    if (!guildId || !botToken) return reply("Comando disponivel apenas em servidores.");
+    const headers = { Authorization: `Bot ${botToken}`, "Content-Type": "application/json" };
+    const apiBase = `https://discord.com/api/v10`;
+
+    // Cria cargos
+    const roles = [
+      { name: "Verificado", color: 0x3498DB, hoist: true },
+      { name: "Mestre do ARAM", color: 0xF1C40F, hoist: true },
+      { name: "Lenda das Cartas", color: 0xE74C3C, hoist: true },
+    ];
+    for (const role of roles) {
+      await fetch(`${apiBase}/guilds/${guildId}/roles`, { method: "POST", headers, body: JSON.stringify(role) });
+    }
+
+    // Cria categorias e canais
+    const catRes = await fetch(`${apiBase}/guilds/${guildId}/channels`, { method: "POST", headers, body: JSON.stringify({ name: "ARAM DE CARTINHAS", type: 4 }) });
+    const cat = await catRes.json();
+    const catId = cat.id;
+
+    const channels = [
+      { name: "boas-vindas", type: 0, topic: "Bem-vindo ao servidor ARAM de Cartinhas!" },
+      { name: "verificacao", type: 0, topic: "Use /verificar para vincular sua conta do LoL" },
+      { name: "fila-aram", type: 0, topic: "Use /fila para entrar na fila de partidas" },
+      { name: "resultados", type: 0, topic: "Resultados das partidas" },
+      { name: "ranking", type: 0, topic: "Use /top para ver o ranking" },
+    ];
+    for (const ch of channels) {
+      await fetch(`${apiBase}/guilds/${guildId}/channels`, { method: "POST", headers, body: JSON.stringify({ ...ch, parent_id: catId }) });
+    }
+
+    return reply("Servidor configurado! Canais e cargos criados com sucesso.", false);
+  }
+
     const matchId = options.find(x => x.name === "match_id")?.value;
     const winningTeam = options.find(x => x.name === "time_vencedor")?.value;
     const { data: match, error } = await supabase.from("matches").select("id,status").eq("id", matchId).maybeSingle();
