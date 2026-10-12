@@ -80,23 +80,23 @@ async function handleCommand(interaction) {
     const rate = player.matches_played ? Math.round((player.matches_won / player.matches_played) * 100) : 0;
     const xpNeeded = player.level * 200;
     const xpPct = Math.min(100, Math.round((player.xp / xpNeeded) * 100));
-    const skinColors = { default: "5865F2", shadow: "cc0000", gold: "FFB800", void: "8c00ff", ice: "00b4ff" };
+    const bar = "â–ˆ".repeat(Math.floor(xpPct / 10)) + "â–‘".repeat(10 - Math.floor(xpPct / 10));
+    const skinColors = { default: 0x5865F2, shadow: 0xcc0000, gold: 0xFFB800, void: 0x8c00ff, ice: 0x00b4ff };
     const color = skinColors[player.active_skin] ?? skinColors.default;
+    const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.20.1/img/profileicon/${player.profile_icon_id ?? 1}.png`;
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
         embeds: [{
-          color: parseInt(color, 16),
-          author: { name: player.riot_id },
+          color,
+          author: { name: player.riot_id, icon_url: iconUrl },
           fields: [
-            { name: "Nivel", value: `${player.level}`, inline: true },
-            { name: "XP", value: `${player.xp} / ${xpNeeded}`, inline: true },
-            { name: "Moedas", value: `ðŸª™ ${player.coins}`, inline: true },
-            { name: "Partidas", value: `${player.matches_played}`, inline: true },
-            { name: "Vitorias", value: `${player.matches_won} (${rate}%)`, inline: true },
-            { name: "Skin", value: player.active_skin, inline: true },
+            { name: "Nivel & XP", value: `Nivel **${player.level}**\n${bar} ${xpPct}%\n${player.xp} / ${xpNeeded} XP`, inline: true },
+            { name: "Economia", value: `ðŸª™ **${player.coins}** moedas`, inline: true },
+            { name: "Partidas", value: `ðŸŽ® **${player.matches_played}** jogadas\nðŸ† **${player.matches_won}** vitorias (${rate}%)`, inline: true },
           ],
-          footer: { text: `XP: ${xpPct}% para o proximo nivel` },
+          footer: { text: `Skin: ${player.active_skin} | Use /loja para mudar` },
+          thumbnail: { url: iconUrl },
         }],
         flags: 64,
       },
