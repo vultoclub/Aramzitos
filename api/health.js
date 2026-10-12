@@ -1,7 +1,3 @@
-import { getSupabase } from "../src/supabase.js";
-
-export default async function handler(req, res) {
-  // Inicializa o cliente Supabase para manter a conexao aquecida
-  try { getSupabase(); } catch {}
+export default function handler(req, res) {
   return res.status(200).json({ ok: true, ts: Date.now() });
 }
