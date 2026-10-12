@@ -1,0 +1,12 @@
+{
+  "name": "discord-aram-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vercel dev", "register": "node scripts/register-commands.js" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.40.0",
+    "discord-interactions": "^4.0.0"
+  },
+  "devDependencies": { "vercel": "^39.0.0" }
+}
