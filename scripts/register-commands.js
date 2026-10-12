@@ -1,15 +1,20 @@
 const commands = [
   {
-    name: "verificar",
-    description: "Verifique sua conta de League of Legends",
-    options: [
-      { name: "game_name", description: "Nome Riot", type: 3, required: true },
-      { name: "tag_line",  description: "Tag Riot sem #", type: 3, required: true },
-    ],
+    name: "setup",
+    description: "Configure seu perfil: elo e conta do LoL",
   },
-  { name: "perfil",   description: "Veja seu card de perfil com stats e elo" },
-  { name: "top",      description: "Veja o ranking de jogadores" },
-  { name: "loja",     description: "Veja os itens disponÃ­veis na loja" },
+  {
+    name: "perfil",
+    description: "Veja seu card de perfil com stats e elo",
+  },
+  {
+    name: "top",
+    description: "Veja o ranking de jogadores",
+  },
+  {
+    name: "loja",
+    description: "Veja os itens disponÃ­veis na loja",
+  },
   {
     name: "comprar",
     description: "Compre um item da loja com suas moedas",
@@ -20,7 +25,6 @@ const commands = [
     description: "Equipe uma skin de card que voce possui",
     options: [{ name: "item", description: "ID da skin (veja /loja)", type: 3, required: true }],
   },
-  { name: "setup",    description: "Configura os canais e cargos do servidor ARAM de Cartinhas" },
   {
     name: "resultado",
     description: "Registre o resultado de uma partida",
