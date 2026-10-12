@@ -1,4 +1,7 @@
 {
-  "functions": { "api/interactions.js": { "maxDuration": 10 } },
-  "routes": [{ "src": "/api/interactions", "dest": "/api/interactions.js" }]
+  "functions": {
+    "api/interactions.js": {
+      "maxDuration": 10
+    }
+  }
 }
