@@ -3,8 +3,9 @@ const commands = [
     { name: "game_name", description: "Nome Riot", type: 3, required: true },
     { name: "tag_line", description: "Tag Riot sem #", type: 3, required: true },
   ] },
-  { name: "perfil", description: "Veja seu perfil e estatísticas" },
+  { name: "perfil", description: "Veja seu perfil e estatÃ­sticas" },
   { name: "top", description: "Veja o ranking de jogadores" },
+  { name: "setup", description: "Configura os canais e cargos do servidor ARAM de Cartinhas" },
   { name: "resultado", description: "Registre o resultado de uma partida", options: [
     { name: "match_id", description: "ID UUID da partida", type: 3, required: true },
     { name: "time_vencedor", description: "Time vencedor", type: 3, required: true, choices: [{ name: "Azul", value: "blue" }, { name: "Vermelho", value: "red" }] },
