@@ -1,7 +1,7 @@
 import { InteractionResponseType, InteractionType, verifyKey } from "discord-interactions";
 import { supabase } from "../src/supabase.js";
 import { getAccountByRiotId, getSummonerByPuuid } from "../src/riot.js";
-import { applyMatchReward } from "../src/gamification.js";
+import { applyMatchReward, getRolesForLevel } from "../src/gamification.js";
 
 export const config = { api: { bodyParser: false } };
 
@@ -298,7 +298,26 @@ async function handleCommand(interaction) {
     for (const p of participants ?? []) {
       const { data: player, error: rErr } = await supabase.from("players").select("xp,level,coins,matches_played,matches_won").eq("discord_id", p.discord_id).single();
       if (rErr) throw rErr;
-      await supabase.from("players").update(applyMatchReward(player, p.team === winningTeam)).eq("discord_id", p.discord_id);
+      const reward = applyMatchReward(player, p.team === winningTeam);
+      const { error: uErr } = await supabase.from("players").update({
+        xp: reward.xp, level: reward.level, coins: reward.coins,
+        matches_played: reward.matches_played, matches_won: reward.matches_won,
+      }).eq("discord_id", p.discord_id);
+      if (uErr) throw uErr;
+
+      // Atribui cargos de nivel se subiu
+      if (reward.leveledUp && interaction.guild_id && process.env.DISCORD_BOT_TOKEN) {
+        const roles = getRolesForLevel(reward.level);
+        for (const role of roles) {
+          await fetch(`https://discord.com/api/v10/guilds/${interaction.guild_id}/members/${p.discord_id}/roles/${role.roleId}`, {
+            method: "PUT",
+            headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+          });
+        }
+        if (roles.length > 0) {
+          console.log(`${p.discord_id} subiu para nivel ${reward.level} â€” cargos atribuidos: ${roles.map(r => r.name).join(", ")}`);
+        }
+      }
     }
     await supabase.from("matches").update({ status: "finalizada", winner_team: winningTeam }).eq("id", matchId);
     return reply(`Resultado registrado. Time **${winningTeam}** venceu e as recompensas foram distribuidas.`, false);
