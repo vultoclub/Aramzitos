@@ -234,6 +234,24 @@ async function handleCommand(interaction) {
         const redNames  = red.map((p, i) => `${i === 0 ? "**[CAP]** " : ""}${p.riot_id}${p.elo ? ` (${p.elo})` : ""}`).join("\n");
         const roomName  = `ARAM-${Math.floor(1000 + Math.random() * 9000)}`;
         const roomPass  = `cart${Math.floor(1000 + Math.random() * 9000)}`;
+
+        // Tenta criar lobby automaticamente via LCU server (opcional)
+        const lobbyUrl    = process.env.LOBBY_URL;
+        const lobbySecret = process.env.LOBBY_SECRET;
+        let lobbyStatus   = "";
+        if (lobbyUrl && lobbySecret) {
+          try {
+            const lcuRes = await fetch(lobbyUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${lobbySecret}` },
+              body: JSON.stringify({ roomName, roomPassword: roomPass, players: shuffled.map(p => p.riot_id) }),
+              signal: AbortSignal.timeout(8000),
+            });
+            lobbyStatus = lcuRes.ok ? " (Lobby criado automaticamente!)" : " (Lobby manual â€” verifique o PC)";
+          } catch {
+            lobbyStatus = " (Lobby manual â€” PC nao respondeu)";
+          }
+        }
         return {
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
@@ -246,7 +264,7 @@ async function handleCommand(interaction) {
                 { name: "Nome da Sala",   value: `\`${roomName}\``, inline: true },
                 { name: "Senha da Sala",  value: `\`${roomPass}\``, inline: true },
               ],
-              description: `O capitao **${blue[0].riot_id}** cria a sala no LoL Client com o nome e senha acima.\nApos a partida, use **/resultado match_id:${match?.id ?? "???"}** para registrar o vencedor.`,
+              description: `O capitao **${blue[0].riot_id}** cria a sala no LoL Client com o nome e senha acima.${lobbyStatus}\nApos a partida, use **/resultado match_id:${match?.id ?? "???"}** para registrar o vencedor.`,
               footer: { text: match ? `ID: ${match.id}` : "" },
             }],
           },
